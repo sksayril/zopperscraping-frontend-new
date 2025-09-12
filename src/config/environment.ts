@@ -1,7 +1,7 @@
 // Environment configuration
 export const ENV = {
   // API Configuration
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://7cvccltb-3100.inc1.devtunnels.ms/api',
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.b2bbusineesleads.shop/api',
   
   // Authentication
   DEMO_USERNAME: import.meta.env.VITE_DEMO_USERNAME || 'admin',

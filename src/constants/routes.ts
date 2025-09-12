@@ -13,7 +13,7 @@ export const ROUTES = {
   
   // API endpoints
   API: {
-    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://7cvccltb-3100.inc1.devtunnels.ms/api',
+    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.b2bbusineesleads.shop/api',
     
     // Scraping endpoints
     AMAZON: '/amazon/scrape-product',
