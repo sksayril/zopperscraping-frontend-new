@@ -1,45 +1,64 @@
 import { useState } from 'react';
-import { Search, Loader2, AlertCircle, CheckCircle, ExternalLink, RefreshCw } from 'lucide-react';
-import { apiService, AmazonScrapeRequest, AmazonScrapeResponse, AmazonProductData } from '../services/api';
+import { Search, Loader2, AlertCircle, CheckCircle, ExternalLink, RefreshCw, Box, List } from 'lucide-react';
+import { apiService, AmazonScrapeRequest, AmazonScrapeResponse, AmazonProductData, AmazonCategoryScrapeRequest, AmazonCategoryScrapeResponse, AmazonCategoryScrapeData } from '../services/api';
 import ProductDisplay from './ProductDisplay';
 import { validateAmazonUrl, formatPrice, formatDate, generateImagePlaceholder } from '../utils/helpers';
 
+// A new component to display category results. I will create this file later.
+import AmazonCategoryProductDisplay from './AmazonCategoryProductDisplay'; 
+
 export default function AmazonScraper() {
+  const [scrapeType, setScrapeType] = useState<'product' | 'category'>('product');
   const [url, setUrl] = useState('');
+  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [scrapedProduct, setScrapedProduct] = useState<AmazonProductData | null>(null);
+  const [scrapedCategoryData, setScrapedCategoryData] = useState<AmazonCategoryScrapeData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scrapeHistory, setScrapeHistory] = useState<AmazonProductData[]>([]);
 
   const handleScrape = async () => {
     if (!url.trim()) {
-      setError('Please enter a valid Amazon product URL');
+      setError(`Please enter a valid Amazon ${scrapeType} URL`);
       return;
     }
 
-    // Basic URL validation
-    if (!validateAmazonUrl(url)) {
+    if (scrapeType === 'product' && !validateAmazonUrl(url)) {
       setError('Please enter a valid Amazon product URL (must contain amazon. and /dp/)');
       return;
     }
 
     setIsLoading(true);
     setError(null);
+    setScrapedProduct(null);
+    setScrapedCategoryData(null);
 
     try {
-      const request: AmazonScrapeRequest = { url: url.trim() };
-      const response: AmazonScrapeResponse = await apiService.scrapeAmazonProduct(request);
-      
-      if (response.success && response.data) {
-        setScrapedProduct(response.data);
-        setScrapeHistory(prev => [response.data, ...prev.slice(0, 4)]); // Keep last 5 items
-        setUrl(''); // Clear the input after successful scrape
-      } else {
-        setError(response.message || 'Failed to scrape product data');
+      if (scrapeType === 'product') {
+        const request: AmazonScrapeRequest = { url: url.trim() };
+        const response: AmazonScrapeResponse = await apiService.scrapeAmazonProduct(request);
+        
+        if (response.success && response.data) {
+          setScrapedProduct(response.data);
+          setScrapeHistory(prev => [response.data, ...prev.slice(0, 4)]);
+          setUrl('');
+        } else {
+          setError(response.message || 'Failed to scrape product data');
+        }
+      } else { // category scrape
+        const request: AmazonCategoryScrapeRequest = { url: url.trim(), page };
+        const response: AmazonCategoryScrapeResponse = await apiService.scrapeAmazonCategory(request);
+
+        if (response.success && response.data) {
+          setScrapedCategoryData(response.data);
+          setUrl('');
+        } else {
+          setError(response.message || 'Failed to scrape category data');
+        }
       }
     } catch (err) {
       console.error('Scraping error:', err);
-      setError('Failed to connect to the scraping service. Please check if the API server is running on https://7cvccltb-3100.inc1.devtunnels.ms');
+      setError('Failed to connect to the scraping service. Please check if the API server is running.');
     } finally {
       setIsLoading(false);
     }
@@ -53,6 +72,7 @@ export default function AmazonScraper() {
 
   const clearResults = () => {
     setScrapedProduct(null);
+    setScrapedCategoryData(null);
     setError(null);
   };
 
@@ -68,14 +88,47 @@ export default function AmazonScraper() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center space-x-2 mb-4">
           <Search className="w-5 h-5 text-orange-600" />
-          <h2 className="text-xl font-semibold text-gray-900">Amazon Product Scraper</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Amazon Scraper</h2>
         </div>
         
         <div className="space-y-4">
+          {/* Scrape Type Selection */}
+          <div className="flex items-center space-x-4">
+            <label className="text-sm font-medium text-gray-700">Scrape Type:</label>
+            <div className="flex items-center">
+              <input
+                id="product-scrape"
+                type="radio"
+                value="product"
+                checked={scrapeType === 'product'}
+                onChange={() => setScrapeType('product')}
+                className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500"
+              />
+              <label htmlFor="product-scrape" className="ml-2 block text-sm text-gray-900">
+                <Box className="inline w-4 h-4 mr-1" />
+                Product
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                id="category-scrape"
+                type="radio"
+                value="category"
+                checked={scrapeType === 'category'}
+                onChange={() => setScrapeType('category')}
+                className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500"
+              />
+              <label htmlFor="category-scrape" className="ml-2 block text-sm text-gray-900">
+                <List className="inline w-4 h-4 mr-1" />
+                Category
+              </label>
+            </div>
+          </div>
+
           {/* URL Input */}
           <div>
             <label htmlFor="amazon-url" className="block text-sm font-medium text-gray-700 mb-2">
-              Amazon Product URL
+              Amazon {scrapeType === 'product' ? 'Product' : 'Category'} URL
             </label>
             <div className="flex space-x-3">
               <input
@@ -84,10 +137,23 @@ export default function AmazonScraper() {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="https://www.amazon.in/product-name/dp/B0F945QD5Z/..."
+                placeholder={scrapeType === 'product' 
+                  ? "https://www.amazon.in/product-name/dp/B0F945QD5Z/..."
+                  : "https://www.amazon.in/s?k=some-category..."}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 disabled={isLoading}
               />
+              {scrapeType === 'category' && (
+                <input
+                  type="number"
+                  value={page}
+                  onChange={(e) => setPage(parseInt(e.target.value, 10))}
+                  min="1"
+                  className="w-24 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  disabled={isLoading}
+                  placeholder="Page"
+                />
+              )}
               <button
                 onClick={handleScrape}
                 disabled={isLoading || !url.trim()}
@@ -107,7 +173,9 @@ export default function AmazonScraper() {
               </button>
             </div>
             <p className="mt-2 text-sm text-gray-500">
-              Enter a valid Amazon product URL to scrape product details, images, and specifications.
+              {scrapeType === 'product' 
+                ? "Enter a valid Amazon product URL to scrape product details."
+                : "Enter a category/search results URL and page number to scrape."}
             </p>
           </div>
 
@@ -139,14 +207,14 @@ export default function AmazonScraper() {
           )}
 
           {/* Success Message */}
-          {scrapedProduct && !error && (
+          {(scrapedProduct || scrapedCategoryData) && !error && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="flex items-center space-x-3">
                 <CheckCircle className="w-5 h-5 text-green-600" />
                 <div>
-                  <h3 className="text-sm font-medium text-green-800">Product Scraped Successfully</h3>
+                  <h3 className="text-sm font-medium text-green-800">Scraped Successfully</h3>
                   <p className="text-sm text-green-700">
-                    Found: {scrapedProduct.productName}
+                    {scrapedProduct ? `Found: ${scrapedProduct.productName}` : `Found ${scrapedCategoryData?.totalProducts} products on page ${scrapedCategoryData?.page}`}
                   </p>
                 </div>
                 <button
@@ -164,6 +232,11 @@ export default function AmazonScraper() {
       {/* Scraped Product Display */}
       {scrapedProduct && (
         <ProductDisplay product={scrapedProduct} />
+      )}
+
+      {/* Scraped Category Display */}
+      {scrapedCategoryData && (
+        <AmazonCategoryProductDisplay data={scrapedCategoryData} />
       )}
 
       {/* Scrape History */}

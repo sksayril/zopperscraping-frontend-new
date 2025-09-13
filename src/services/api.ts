@@ -29,6 +29,48 @@ export interface AmazonScrapeResponse {
   data: AmazonProductData;
 }
 
+export interface AmazonCategoryScrapeRequest {
+  url: string;
+  page: number;
+}
+
+export interface AmazonCategoryProduct {
+    asin: string;
+    productName: string;
+    brand: string;
+    sellingPrice: string;
+    mrp: string;
+    discount: string;
+    productImage: string;
+    productUrl: string;
+    rating: string;
+    reviewCount: string;
+    availability: string;
+    isSponsored: boolean;
+    isPrime: boolean;
+    scrapedAt: string;
+}
+
+export interface AmazonCategoryScrapeData {
+    page: number;
+    url: string;
+    products: AmazonCategoryProduct[];
+    pagination: {
+        currentPage: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+    };
+    totalProducts: number;
+    scrapedAt: string;
+}
+
+export interface AmazonCategoryScrapeResponse {
+  success: boolean;
+  message: string;
+  data: AmazonCategoryScrapeData;
+}
+
   export interface FlipkartScrapeRequest {
   url: string;
 }
@@ -109,6 +151,47 @@ export interface FlipkartScrapeResponse {
   success: boolean;
   message: string;
   data: FlipkartProductData;
+}
+
+export interface FlipkartCategoryScrapeRequest {
+  url: string;
+  page: number;
+}
+
+export interface FlipkartCategoryProduct {
+    productId: string;
+    productName: string;
+    brand: string;
+    sellingPrice: string;
+    actualPrice: string;
+    discount: string;
+    productImage: string;
+    productUrl: string;
+    rating: string;
+    reviewCount: string;
+    availability: string;
+    isWishlisted: boolean;
+    scrapedAt: string;
+}
+
+export interface FlipkartCategoryScrapeData {
+    page: number;
+    url: string;
+    products: FlipkartCategoryProduct[];
+    pagination: {
+        currentPage: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+    };
+    totalProducts: number;
+    scrapedAt: string;
+}
+
+export interface FlipkartCategoryScrapeResponse {
+  success: boolean;
+  message: string;
+  data: FlipkartCategoryScrapeData;
 }
 
 export interface MyntraScrapeRequest {
@@ -1270,8 +1353,22 @@ class ApiService {
     });
   }
 
+  async scrapeAmazonCategory(request: AmazonCategoryScrapeRequest): Promise<AmazonCategoryScrapeResponse> {
+    return this.makeRequest<AmazonCategoryScrapeResponse>(ROUTES.API.AMAZON_CATEGORY, {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
   async scrapeFlipkartProduct(request: FlipkartScrapeRequest): Promise<FlipkartScrapeResponse> {
     return this.makeRequest<FlipkartScrapeResponse>(ROUTES.API.FLIPKART, {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async scrapeFlipkartCategory(request: FlipkartCategoryScrapeRequest): Promise<FlipkartCategoryScrapeResponse> {
+    return this.makeRequest<FlipkartCategoryScrapeResponse>(ROUTES.API.FLIPKART_CATEGORY, {
       method: 'POST',
       body: JSON.stringify(request),
     });

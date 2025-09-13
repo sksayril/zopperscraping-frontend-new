@@ -13,11 +13,14 @@ export const ROUTES = {
   
   // API endpoints
   API: {
-    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.b2bbusineesleads.shop/api',
+    // BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.b2bbusineesleads.shop/api',
+    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3333/api',
     
     // Scraping endpoints
     AMAZON: '/amazon/scrape-product',
+    AMAZON_CATEGORY: '/amazon/scrape-category',
     FLIPKART: '/flipkart/scrape-product',
+    FLIPKART_CATEGORY: '/flipkart/scrape-category',
     MYNTRA: '/myntra/scrape-product',
     JIOMART: '/jiomart/scrape',
     AJIO: '/ajio/scrape',
