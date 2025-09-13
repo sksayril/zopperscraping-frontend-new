@@ -14,7 +14,7 @@ export const ROUTES = {
   // API endpoints
   API: {
     // BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.b2bbusineesleads.shop/api',
-    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3333/api',
+    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.b2bbusineesleads.shop/api',
     
     // Scraping endpoints
     AMAZON: '/amazon/scrape-product',
