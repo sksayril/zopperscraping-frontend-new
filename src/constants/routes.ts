@@ -14,7 +14,8 @@ export const ROUTES = {
   // API endpoints
   API: {
     // BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.b2bbusineesleads.shop/api',
-    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.b2bbusineesleads.shop/api',
+    // BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.b2bbusineesleads.shop/api',
+    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3333/api',
     
     // Scraping endpoints
     AMAZON: '/amazon/scrape-product',
@@ -22,7 +23,9 @@ export const ROUTES = {
     FLIPKART: '/flipkart/scrape-product',
     FLIPKART_CATEGORY: '/flipkart/scrape-category',
     MYNTRA: '/myntra/scrape-product',
+    MYNTRA_CATEGORY: '/myntra/scrape-category',
     JIOMART: '/jiomart/scrape',
+    JIOMART_CATEGORY: '/jiomart/scrape-category',
     AJIO: '/ajio/scrape',
     CHROMA: '/chroma/scrape',
     VIJAYSALES: '/vijaysales/scrape',

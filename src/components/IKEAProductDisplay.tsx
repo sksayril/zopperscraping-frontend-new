@@ -389,3 +389,4 @@ export default function IKEAProductDisplay({ product }: IKEAProductDisplayProps)
 }
 
 
+

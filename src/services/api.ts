@@ -229,6 +229,30 @@ export interface MyntraScrapeResponse {
   data: MyntraProductData;
 }
 
+export interface MyntraCategoryScrapeRequest {
+  url: string;
+}
+
+export interface MyntraCategoryProduct {
+    brand: string;
+    productName: string;
+    price: string;
+    originalPrice: string;
+    discount: string;
+    productUrl: string;
+    imageUrl: string;
+}
+
+export interface MyntraCategoryScrapeData {
+    products: MyntraCategoryProduct[];
+    totalProducts: number;
+}
+
+export interface MyntraCategoryScrapeResponse {
+  success: boolean;
+  data: MyntraCategoryScrapeData;
+}
+
 export interface JioMartScrapeRequest {
   url: string;
 }
@@ -287,6 +311,32 @@ export interface JioMartScrapeResponse {
   message: string;
   data: JioMartProductData;
   savedTo?: string;
+}
+
+export interface JioMartCategoryScrapeRequest {
+  url: string;
+}
+
+export interface JioMartCategoryProduct {
+    productUrl: string;
+    imageUrl: string;
+    brand: string;
+    productName: string;
+    price: string;
+    originalPrice: string;
+    discount: string;
+}
+
+export interface JioMartCategoryScrapeData {
+    products: JioMartCategoryProduct[];
+    totalProducts: number;
+    scrapedAt: string;
+}
+
+export interface JioMartCategoryScrapeResponse {
+  success: boolean;
+  message: string;
+  data: JioMartCategoryScrapeData;
 }
 
 export interface AjioScrapeRequest {
@@ -1381,8 +1431,22 @@ class ApiService {
     });
   }
 
+  async scrapeMyntraCategory(request: MyntraCategoryScrapeRequest): Promise<MyntraCategoryScrapeResponse> {
+    return this.makeRequest<MyntraCategoryScrapeResponse>(ROUTES.API.MYNTRA_CATEGORY, {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
   async scrapeJioMartProduct(request: JioMartScrapeRequest): Promise<JioMartScrapeResponse> {
     return this.makeRequest<JioMartScrapeResponse>(ROUTES.API.JIOMART, {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async scrapeJioMartCategory(request: JioMartCategoryScrapeRequest): Promise<JioMartCategoryScrapeResponse> {
+    return this.makeRequest<JioMartCategoryScrapeResponse>(ROUTES.API.JIOMART_CATEGORY, {
       method: 'POST',
       body: JSON.stringify(request),
     });

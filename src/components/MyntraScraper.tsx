@@ -1,45 +1,61 @@
 import { useState } from 'react';
-import { Search, Loader2, AlertCircle, CheckCircle, ExternalLink, RefreshCw } from 'lucide-react';
-import { apiService, MyntraScrapeRequest, MyntraScrapeResponse, MyntraProductData } from '../services/api';
+import { Search, Loader2, AlertCircle, CheckCircle, ExternalLink, RefreshCw, Box, List } from 'lucide-react';
+import { apiService, MyntraScrapeRequest, MyntraScrapeResponse, MyntraProductData, MyntraCategoryScrapeRequest, MyntraCategoryScrapeResponse, MyntraCategoryScrapeData } from '../services/api';
 import MyntraProductDisplay from './MyntraProductDisplay';
-import { validateMyntraUrl, formatPrice, formatDate, generateImagePlaceholder } from '../utils/helpers';
+import { validateMyntraUrl, formatDate, generateImagePlaceholder } from '../utils/helpers';
+import MyntraCategoryProductDisplay from './MyntraCategoryProductDisplay';
 
 export default function MyntraScraper() {
+  const [scrapeType, setScrapeType] = useState<'product' | 'category'>('product');
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [scrapedProduct, setScrapedProduct] = useState<MyntraProductData | null>(null);
+  const [scrapedCategoryData, setScrapedCategoryData] = useState<MyntraCategoryScrapeData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scrapeHistory, setScrapeHistory] = useState<MyntraProductData[]>([]);
 
   const handleScrape = async () => {
     if (!url.trim()) {
-      setError('Please enter a valid Myntra product URL');
+      setError(`Please enter a valid Myntra ${scrapeType} URL`);
       return;
     }
 
-    // Basic URL validation
-    if (!validateMyntraUrl(url)) {
+    if (scrapeType === 'product' && !validateMyntraUrl(url)) {
       setError('Please enter a valid Myntra product URL (must contain myntra.com and /buy)');
       return;
     }
 
     setIsLoading(true);
     setError(null);
+    setScrapedProduct(null);
+    setScrapedCategoryData(null);
 
     try {
-      const request: MyntraScrapeRequest = { url: url.trim() };
-      const response: MyntraScrapeResponse = await apiService.scrapeMyntraProduct(request);
-      
-      if (response.success && response.data) {
-        setScrapedProduct(response.data);
-        setScrapeHistory(prev => [response.data, ...prev.slice(0, 4)]); // Keep last 5 items
-        setUrl(''); // Clear the input after successful scrape
+      if (scrapeType === 'product') {
+        const request: MyntraScrapeRequest = { url: url.trim() };
+        const response: MyntraScrapeResponse = await apiService.scrapeMyntraProduct(request);
+        
+        if (response.success && response.data) {
+          setScrapedProduct(response.data);
+          setScrapeHistory(prev => [response.data, ...prev.slice(0, 4)]);
+          setUrl('');
+        } else {
+          setError(response.message || 'Failed to scrape product data');
+        }
       } else {
-        setError(response.message || 'Failed to scrape product data');
+        const request: MyntraCategoryScrapeRequest = { url: url.trim() };
+        const response: MyntraCategoryScrapeResponse = await apiService.scrapeMyntraCategory(request);
+
+        if (response.success && response.data) {
+          setScrapedCategoryData(response.data);
+          setUrl('');
+        } else {
+          setError(response.message || 'Failed to scrape category data');
+        }
       }
     } catch (err) {
       console.error('Scraping error:', err);
-      setError('Failed to connect to the scraping service. Please check if the API server is running on https://7cvccltb-3100.inc1.devtunnels.ms');
+      setError('Failed to connect to the scraping service. Please check if the API server is running.');
     } finally {
       setIsLoading(false);
     }
@@ -53,6 +69,7 @@ export default function MyntraScraper() {
 
   const clearResults = () => {
     setScrapedProduct(null);
+    setScrapedCategoryData(null);
     setError(null);
   };
 
@@ -68,14 +85,47 @@ export default function MyntraScraper() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center space-x-2 mb-4">
           <Search className="w-5 h-5 text-pink-600" />
-          <h2 className="text-xl font-semibold text-gray-900">Myntra Product Scraper</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Myntra Scraper</h2>
         </div>
         
         <div className="space-y-4">
+          {/* Scrape Type Selection */}
+          <div className="flex items-center space-x-4">
+            <label className="text-sm font-medium text-gray-700">Scrape Type:</label>
+            <div className="flex items-center">
+              <input
+                id="product-scrape-myntra"
+                type="radio"
+                value="product"
+                checked={scrapeType === 'product'}
+                onChange={() => setScrapeType('product')}
+                className="h-4 w-4 text-pink-600 border-gray-300 focus:ring-pink-500"
+              />
+              <label htmlFor="product-scrape-myntra" className="ml-2 block text-sm text-gray-900">
+                <Box className="inline w-4 h-4 mr-1" />
+                Product
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                id="category-scrape-myntra"
+                type="radio"
+                value="category"
+                checked={scrapeType === 'category'}
+                onChange={() => setScrapeType('category')}
+                className="h-4 w-4 text-pink-600 border-gray-300 focus:ring-pink-500"
+              />
+              <label htmlFor="category-scrape-myntra" className="ml-2 block text-sm text-gray-900">
+                <List className="inline w-4 h-4 mr-1" />
+                Category
+              </label>
+            </div>
+          </div>
+
           {/* URL Input */}
           <div>
             <label htmlFor="myntra-url" className="block text-sm font-medium text-gray-700 mb-2">
-              Myntra Product URL
+              Myntra {scrapeType === 'product' ? 'Product' : 'Category'} URL
             </label>
             <div className="flex space-x-3">
               <input
@@ -84,7 +134,9 @@ export default function MyntraScraper() {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="https://www.myntra.com/product-name/brand/product-id/buy"
+                placeholder={scrapeType === 'product' 
+                  ? "https://www.myntra.com/product-name/brand/product-id/buy" 
+                  : "https://www.myntra.com/clothing..."}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 disabled={isLoading}
               />
@@ -107,7 +159,9 @@ export default function MyntraScraper() {
               </button>
             </div>
             <p className="mt-2 text-sm text-gray-500">
-              Enter a valid Myntra product URL to scrape product details, images, and specifications.
+              {scrapeType === 'product'
+                ? "Enter a valid Myntra product URL to scrape product details."
+                : "Enter a category/search results URL to scrape all products from the page."}
             </p>
           </div>
 
@@ -139,14 +193,14 @@ export default function MyntraScraper() {
           )}
 
           {/* Success Message */}
-          {scrapedProduct && !error && (
+          {(scrapedProduct || scrapedCategoryData) && !error && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="flex items-center space-x-3">
                 <CheckCircle className="w-5 h-5 text-green-600" />
                 <div>
-                  <h3 className="text-sm font-medium text-green-800">Product Scraped Successfully</h3>
+                  <h3 className="text-sm font-medium text-green-800">Scraped Successfully</h3>
                   <p className="text-sm text-green-700">
-                    Found: {scrapedProduct.title}
+                    {scrapedProduct ? `Found: ${scrapedProduct.title}` : `Found ${scrapedCategoryData?.totalProducts} products.`}
                   </p>
                 </div>
                 <button
@@ -164,6 +218,11 @@ export default function MyntraScraper() {
       {/* Scraped Product Display */}
       {scrapedProduct && (
         <MyntraProductDisplay product={scrapedProduct} />
+      )}
+
+      {/* Scraped Category Display */}
+      {scrapedCategoryData && (
+        <MyntraCategoryProductDisplay data={scrapedCategoryData} />
       )}
 
       {/* Scrape History */}
