@@ -1,8 +1,8 @@
 // Environment configuration
 export const ENV = {
   // API Configuration
-  // API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.b2bbusineesleads.shop/api',
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3333/api',
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.b2bbusineesleads.shop/api',
+  // API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3333/api',
   
   // Authentication
   DEMO_USERNAME: import.meta.env.VITE_DEMO_USERNAME || 'admin',
